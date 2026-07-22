@@ -4,10 +4,9 @@ Flast is a *Static Site Generator* (SSG) for documentation focused on human and 
 ## Features
 - SEO compliant (robots.txt + sitemap.xml)
 - Supports all filetypes (.ico, .jpeg...)
-- Code highlighting
-- Nav bar positioning ("order: " in yaml, lower = higher)
-- Python 3.13 and older support
-- Online and Offline Images
+- Image conversion to .webp for faster loading times
+- Code highlighting + copy
+- Nav bar positioning
 - Deployment options
 
 ## Getting Started
@@ -112,8 +111,6 @@ and are never saved.
 
 You can easily install `rsync` on Windows by installing `WSL` and a Linux distribution.
 
-### Content
-Doesn't matter, everything gets copied. 
 #### .md
 Should have a heading e.g: (minimum = title)
 ```yaml
@@ -128,26 +125,6 @@ sitemap:
 ```
 Then the rest of the .md file. 
 
-## Working on (never going to happen)
-- More templates
-- Export function (.zip, .tar...)
-- Search feature on website
-- Table of contents
-- Last updated timestamp
-- Reading time estimate
-- Multi language support
-- copy code clipboard
-- file naming for code blocks
-- file tabs for different code blocks
-- Image conversion
-- Social media cards (bottom of sidebar)
-
 ## Example
 Content contains example  documentation of FlanOS. Find it here:   
 [FlanOS Documentation](https://flanos.forageek.com/)
-
-# License
-Free for personal, educational, research, and non-commercial use.
-Commercial use requires written permission or a separate commercial license.
-
-
