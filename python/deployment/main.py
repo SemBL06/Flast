@@ -248,7 +248,13 @@ def _is_surge_domain(domain: str) -> bool:
 
 
 def _choose_self_hosted_provider(configuration: dict) -> SelfHostedProvider | None:
-    deployment = configuration.setdefault("deployment", {})
+    # Older configurations used an empty string for this field.  Treat any
+    # non-object value as an empty deployment configuration so selecting
+    # self-hosted deployment can migrate it instead of failing on ``.get``.
+    deployment = configuration.get("deployment")
+    if not isinstance(deployment, dict):
+        deployment = {}
+        configuration["deployment"] = deployment
     saved_target = deployment.get("self")
     target = SelfHostedTarget.from_configuration(saved_target) if isinstance(saved_target, dict) else None
 

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from python.deployment.main import main as deploy_site
+from python.deployment.main import _choose_self_hosted_provider, main as deploy_site
 from python.deployment.provider import DeploymentResult
 
 
@@ -111,3 +111,28 @@ class DeploymentWorkflowTests(unittest.TestCase):
                 ),
             ):
                 self.assertFalse(deploy_site(root_dir))
+
+    def test_self_hosted_configuration_migrates_legacy_string(self):
+        configuration = {"deployment": ""}
+
+        with patch(
+            "python.deployment.main.questionary.text",
+            side_effect=[
+                Mock(ask=Mock(return_value="server.example")),
+                Mock(ask=Mock(return_value="deploy")),
+                Mock(ask=Mock(return_value="22")),
+                Mock(ask=Mock(return_value="/var/www/site")),
+            ],
+        ):
+            provider = _choose_self_hosted_provider(configuration)
+
+        self.assertIsNotNone(provider)
+        self.assertEqual(
+            {
+                "host": "server.example",
+                "user": "deploy",
+                "port": 22,
+                "remote_path": "/var/www/site",
+            },
+            configuration["deployment"]["self"],
+        )
