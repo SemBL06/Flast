@@ -1,64 +1,25 @@
 ---
-title: "Welcome"
+title: "FlanOS"
+description: "Build tiny gadgets with FlanLang and MicroPython, without turning your Pico into a corporate meeting."
+order: 0
 sitemap:
-  lastmod: "2026-05-15"
+  lastmod: "2026-07-30"
   changefreq: "monthly"
-  priority: "0.5"
+  priority: "1.0"
 ---
 
-# Puddinator / Flan OS Docs
+# FlanOS
 
-Welcome! This repo contains a tiny FlanLang runtime (the “OS”) plus a growing set of built-in modules, drivers, and installable extensions. The goal is simple: **write friendly scripts**, run them on small hardware, and keep the script APIs stable while the hardware layer evolves.
+Your microcontroller now has an operating system. Is that excessive? Maybe. Is it fun? Absolutely.
 
-## Where to start
+FlanOS runs small **FlanLang** programs on MicroPython boards. The Raspberry Pi Pico W is the main target, but the runtime avoids Pico-only tricks wherever possible. Add a display, buttons, sensors, an optional SD card, or none of those and build the weird little machine your heart demands.
 
-- New here? Start with:
-  - [Overview](/getting-started/overview.html)
-  - [quickstart](language/quickstart.html)
-- Looking for a specific command? Jump to [modules](modules/).
-- Hacking on the runtime itself? See [architecture(internals/architecture.html).
-- Adding hardware or features? See [extensions](extensions/).
+## Pick your door
 
-## Docs map
+- **I have a board and a USB cable:** [install FlanOS](getting-started/installation.html).
+- **I want to see the language first:** make a snack-sized program in the [quickstart](language/quickstart.html).
+- **I already know the basics:** jump to the [module cheat sheets](modules/core.html).
+- **I want to add Python powers:** learn about [modules](getting-started/modules.html) and [drivers](getting-started/drivers.html).
+- **I enjoy opening the mysterious box:** enter the [runtime architecture](internals/architecture.html).
 
-### Getting started
-
-- [overview](getting-started/overview.html)
-- [project-layout](getting-started/project-layout.html)
-
-### FlanLang (the DSL)
-
-- [Quickstart](language/quickstart.html)
-- [syntax](language/syntax.html)
-
-### Built-in modules (script API)
-
-- [display](modules/display.html)
-- [log](modules/log.html)
-- [system](modules/system.html)
-- [ui](modules/ui.html)
-- [controls](modules/controls.html)
-- [button](modules/button.html)
-- [data](modules/data.html)
-- [config](modules/config.html) (compat wrapper around `data file="main"`)
-- [csv](modules/csv.html)
-- [comm](modules/comm.html)
-- [input](modules/input.html)
-- [/output](modules/output.html)
-- [list](modules/list.html)
-- [math](modules/math.html)
-- [string](modules/string.html)
-- [options](modules/options.html) (legacy-compatible wrapper)
-- [description](modules/description.html) (legacy-compatible wrapper)
-
-### Runtime internals
-
-- [architecture](internals/architecture.html)
-
-### Extensions (drivers & custom modules)
-
-- [drivers](extensions/drivers.html)
-- [custom-modules](extensions/custom-modules.html)
-
-(He wishes you a happy time)
-![Test Image](assets/Monkey-Selfie.webp)
+> FlanOS is under construction. Bring curiosity, not mission-critical nuclear reactor controls.

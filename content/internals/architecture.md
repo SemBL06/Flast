@@ -1,76 +1,62 @@
 ---
-title: "Runtime Architecture"
+title: "How FlanOS Works"
+description: "A contributor’s map of boot, parsing, execution, modules, drivers, and storage."
+order: 50
 sitemap:
-  lastmod: "2026-05-15"
+  lastmod: "2026-07-30"
   changefreq: "monthly"
-  priority: "0.5"
+  priority: "0.6"
 ---
 
-# Runtime Architecture (Flan OS)
+# How FlanOS works
 
-This runtime is built to stay **small, hackable, and MicroPython-friendly**: line-based parsing, lightweight instruction dictionaries, and a stable set of built-in script APIs.
+This page is for people who see a functioning gadget and immediately wonder which file they can poke.
 
-## Big picture
+## Boot
 
-1. **Parser** turns `.fl` source into instruction dictionaries.
-2. **Executor** runs instructions (including loops and events).
-3. **Modules** provide the script API (`display`, `ui`, `data`, …).
-4. **Drivers / custom modules** plug into stable capabilities (`display`, `comm`, `input`, `output`).
+1. MicroPython runs `/main.py`.
+2. `main.py` imports `/os/boot.py` without loading it as one enormous string.
+3. Boot loads `/config/main.yml` and attempts the configured SD mount.
+4. Built-ins register, mostly lazily.
+5. Internal drivers/modules load before SD drivers/modules.
+6. `/config/boot.fl` runs and usually shows the program menu.
+7. The `system start` event fires.
 
-## Core components
+No SD card is an ordinary state, not an emergency.
 
-### Parser (`os/core/parser.py`)
+## Runtime pipeline
 
-Responsibilities:
+```text
+.fl file
+   ↓
+Parser             one instruction dictionary per line
+   ↓
+Executor           variables, expressions, loops, events
+   ↓
+Module API         display, data, system, comm...
+   ↓
+Provider/driver    actual LCD, sensor, radio, or actuator
+```
 
-- tokenize and parse line-based FlanLang
-- emit instruction dictionaries:
-  - `set`
-  - `command`
-  - `if` / `else`
-  - `while`
-  - `foreach`
-  - `event`
-  - `stop` / `skip`
+`core/parser.py` understands the line syntax. `core/executor.py` resolves values and dispatches commands. `Context` holds shared variables, active program paths, cached configuration, providers, and a bounded log history.
 
-### Executor (`os/core/executor.py`)
+## Loading without eating all the RAM
 
-Responsibilities:
+Essential APIs live in `/os/modules/`. Optional Python lives under `/programs` or `/sd`. The loader validates manifests and dependencies, and can register selected modules by path without importing them until first use.
 
-- value resolution (`( … )` expressions, variable lookup, interpolation)
-- control flow execution (`if`, `while`, `foreach`)
-- event registration + triggering
-- module dispatch (`module action ...`)
+Internal extensions win name collisions by default. Enabling `allow_override` changes that rule, so treat it like hot sauce: deliberate amounts only.
 
-Notable behavior:
+## Storage
 
-- interpolation uses `{name}` placeholders and resolves variables + dotted paths
-- `foreach i in 1-10` is treated as a numeric range
-- `stop` and `skip` are implemented as loop-control exceptions
+Configuration is cached in `Context` and saved only when changed. While a program runs, its folder temporarily becomes the active app/data path; afterward the previous paths are restored. That is why `file="data"` follows the program rather than a fixed global data directory.
 
-### Context (`os/core/context.py`)
+## Contributor compass
 
-Responsibilities:
+- `/os/core/`: parser, executor, loaders, storage, utilities;
+- `/os/modules/`: essential FlanLang APIs;
+- `/programs/`: internal optional programs, modules, and drivers;
+- `/config/`: device configuration and boot script;
+- `sdcard/`: contents intended for an optional card;
+- `selftest.py`: desktop integration and regression tests.
 
-- shared runtime state (`ctx.vars`)
-- logging and exception reporting
-- keeping track of current app/script paths (`ctx.app_path`, `ctx.data_path`)
-
-## Modules (built-in script API)
-
-Built-in modules are loaded from `os/modules/*` via `os/core/loaders/module_loader.py`.
-
-Each module is registered by name (e.g. `display`, `ui`) and exposes a dict of callables returned by `get_module()`.
-
-One fun detail: `display`, `log`, and `system` are separate script modules, but they share the same Python implementation file (`modules.system`) to keep the runtime footprint tiny.
-
-## Drivers and capabilities
-
-Drivers and installable modules can register providers into:
-
-- `ctx.vars["_providers"]` (singleton providers, e.g. the active display)
-- `ctx.vars["_capability_providers"]` (capability buckets, e.g. `comm`, `input`, `output`)
-
-This is how hardware-specific code plugs into stable script APIs.
-
-Next: [extensions/drivers.html](../extensions/drivers.html) and [extensions/custom-modules.html](../extensions/custom-modules.html).
+Keep the runtime simple enough for MicroPython. Clever is nice; having free RAM is nicer.

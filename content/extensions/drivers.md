@@ -1,52 +1,64 @@
 ---
-title: "Drivers"
+title: "Write a Driver"
+description: "Connect new hardware to FlanOS display, input, output, or communication capabilities."
+order: 41
 sitemap:
-  lastmod: "2026-05-15"
+  lastmod: "2026-07-30"
   changefreq: "monthly"
-  priority: "0.5"
+  priority: "0.7"
 ---
 
-# Drivers (Hardware Providers)
+# Write a driver
 
-Drivers live under `sd/main/drivers/*.py` and are loaded at boot.
+Drivers translate stable FlanLang commands into hardware behaviour. Programs should say `input get tank`; your driver handles pins, timing, and the sensor’s personal grudges.
 
-Drivers can do two things:
+Place drivers in internal `/programs/drivers/` or SD `/drivers/`.
 
-1. expose a module (optional) via `get_module()`
-2. register providers for stable capabilities like `display`, `comm`, `input`, `output`
+## Choose a provider type
 
-## Provider types
+- **Display:** one active provider in `_providers`.
+- **Input:** named sensors in the `input` capability.
+- **Output:** named actuators in the `output` capability.
+- **Comm:** multiple providers such as Wi-Fi and Bluetooth.
 
-### Singleton providers (`_providers`)
+An input driver can expose:
 
-Used when there should be one active implementation.
+```py
+def get(ctx, name=None, config=None, positional=None, option=None, **kwargs):
+    pin = config.get("pin")
+    # Read hardware here.
+    return 42
 
-Example: `display` providers.
 
-### Capability providers (`_capability_providers`)
+def get_input_provider(ctx):
+    return {
+        "get": get
+    }
+```
 
-Used when multiple backends can coexist, keyed by driver/module name.
+Add the same standard `get_manifest()` used by custom modules, with a capability such as `input`.
 
-Examples:
+## Optional hooks
 
-- `comm` providers: `wifi`, `bluetooth`, …
-- `input` providers: `ultrasonic`, `dht11`, …
-- `output` providers: (actuators, LEDs, relays, …)
+The loader recognises:
 
-## Typical driver hooks
+- `get_config_defaults()` for missing default values;
+- `autoconfigure(ctx, config)` for safe hardware detection;
+- `get_display_provider(ctx)`;
+- `get_comm_provider(ctx)`;
+- `get_input_provider(ctx)`;
+- `get_output_provider(ctx)`;
+- `get_module()` when the driver also exposes direct commands.
 
-Drivers may define some of these optional functions (see `os/core/loaders/module_loader.py`):
+Autoconfiguration must fail safely. A missing sensor should not trap boot forever or rewrite working config with guesses.
 
-- `get_manifest()`: metadata (name/version/board/dependencies/capabilities)
-- `get_config_defaults()`: default config values to merge into `main.yml`
-- `autoconfigure(ctx, config)`: mutate config based on detected hardware
-- `get_display_provider(ctx)`
-- `get_comm_provider(ctx)`
-- `get_input_provider(ctx)`
-- `get_output_provider(ctx)`
+## Driver checklist
 
-If you’re writing a new driver, the easiest path is:
+1. Normalise pins such as `16` and `"GP16"`.
+2. Bound every polling loop with a timeout.
+3. Release buses or devices when an operation fails.
+4. Log a useful error without dumping secrets.
+5. Keep pure conversion/state logic testable without hardware.
+6. Test the “device absent” path. Users are extremely talented at forgetting wires.
 
-1. create `sd/main/drivers/your_driver.py`
-2. return a provider dict from `get_*_provider(...)`
-3. add a named device entry in `sd/main/main.yml` (for `input`/`output`) or a display config section
+Study the included drivers in `upload/programs/drivers/` for complete manifests and provider shapes.

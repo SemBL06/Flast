@@ -1,55 +1,80 @@
 ---
 title: "FlanLang Quickstart"
+description: "Learn enough FlanLang to make your board do something in ten minutes."
+order: 20
 sitemap:
-  lastmod: "2026-05-15"
+  lastmod: "2026-07-30"
   changefreq: "monthly"
-  priority: "0.5"
+  priority: "0.9"
 ---
 
-# FlanLang Quickstart
+# FlanLang quickstart
 
-FlanLang is a small line-based DSL designed to feel approachable on tiny devices.
+FlanLang is line-based, small, and allergic to punctuation soup. Let’s build a tiny countdown.
 
-## The three basics
+## 1. Say things
 
-### 1) Assign values with `set`
+Commands follow `module action arguments`:
 
 ```fl
-set name to "Sem"
-set total to (math add 1 2)
+log info "Preparing extremely important beeps"
+display print "Ready?"
+system sleep 500
 ```
 
-### 2) Call commands as `module action ...`
+Quotes keep text together. Numbers do not need quotes.
+
+## 2. Remember things
 
 ```fl
-display print "Hello!"
-log info "Booted"
-system sleep 250
+set name to "Bean Machine"
+set answer to (math add 40 2)
+log info "{name} calculated {answer}"
 ```
 
-### 3) Use expressions inside `( ... )`
+`set` stores a value. Parentheses run a command and return its result. `{name}` inserts a value into quoted text.
 
-Anything inside parentheses executes immediately and returns a value:
-
-```fl
-set scripts to (system scripts)
-set selected to (ui options list=scripts field=name selected=0)
-```
-
-## Tiny example: show a menu, run selection
+## 3. Make decisions
 
 ```fl
-set scripts to (system scripts)
-set selected to (ui options list=scripts field=name selected=0 right=continue)
-
-while on
-    set selected to (ui options right=continue)
-    if (ui action) == "select"
-        system run selected
-        stop
-    end
-    system sleep 80
+if answer == 42
+    display print "Correct. Obviously."
+else
+    display print "Math has escaped."
 end
 ```
 
-Next: [syntax.html](syntax.html) for the full set of control-flow shapes and value rules.
+Blocks end with `end`; indentation is for humans and future-you.
+
+## 4. Loop without summoning infinity
+
+```fl
+foreach number in 3-1
+    display clear
+    display print number
+    system sleep 500
+end
+
+display print "Go!"
+```
+
+Ranges include both ends. `3-1` therefore produces `3`, `2`, `1`.
+
+## 5. Save your masterpiece
+
+Create `countdown/main.fl`, place the folder in internal `/programs/scripts/` or SD `/scripts/`, then reboot. The boot menu discovers it.
+
+```fl
+# countdown/main.fl
+set title to "Tiny Rocket"
+display print title
+
+foreach number in 3-1
+    display print number y=1
+    system sleep 500
+end
+
+log info "Launch! (legally this is only an LED)"
+```
+
+Next, use the [syntax reference](syntax.html) when the language surprises you, and the [module cheat sheets](../modules/core.html) when you want the board to do more.

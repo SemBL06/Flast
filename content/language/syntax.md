@@ -1,122 +1,107 @@
 ---
 title: "FlanLang Syntax"
+description: "The exact syntax understood by today’s FlanLang runtime."
+order: 21
 sitemap:
-  lastmod: "2026-05-15"
+  lastmod: "2026-07-30"
   changefreq: "monthly"
-  priority: "0.5"
+  priority: "0.8"
 ---
 
-# FlanLang Syntax (What the Runtime Actually Understands)
+# FlanLang syntax
 
-This doc mirrors the current runtime behavior in `os/core/*` (not a “future spec”).
+This is the current language, not a dreamy “coming soon” specification.
 
-## Statements
-
-### Assignment
+## Values and variables
 
 ```fl
-set var_name to "text"
-set total to (math add 1 2)
+set count to 3
+set name to "Pico"
+set total to (math add count 4)
 ```
 
-### Commands
+Integers are numbers. Double-quoted values are text. Unquoted words resolve to variables when one exists; otherwise they remain text.
+
+Use dotted paths for items inside dictionaries and lists:
 
 ```fl
-module action
-module action positional
-module action key=value
-module action positional key=value
+set first_name to scan.0.ssid
+log info selected.path
 ```
 
-## Values
-
-### Strings + interpolation
+Insert values into quoted text with braces:
 
 ```fl
-set name to "Sem"
-display print "Hello {name}"
+log info "Hello {name}, total={total}"
 ```
 
-Interpolation resolves:
-
-- variables you `set`
-- dotted paths into variables (e.g. `selected.name`)
-- `module.field` lookups via `module get field` (when supported)
-
-### Dot access
+## Commands and expressions
 
 ```fl
-set first to scan.0.ssid
-set status to demo.status
+display print "Hi" x=center y=0
+set length to (string length "banana")
 ```
 
-### Expressions
+A command is `module action`, followed by positional arguments, `name=value` arguments, or both. Parentheses turn a command into an expression whose result can be stored, compared, or passed elsewhere.
 
-Expressions are just commands written in parentheses:
-
-```fl
-set total to (math add 1 2)
-set chosen to (ui options list=scripts field=name)
-```
-
-## Control flow
-
-### `if` / `else`
+## Conditions
 
 ```fl
-if condition
-    log info "Yep"
+if temperature > 25 and fan == off
+    log warn "It is becoming soup in here"
 else
-    log warn "Nope"
+    log info "All chill"
 end
 ```
 
-### `while`
+Supported pieces:
+
+- booleans: `on`, `off`;
+- comparison: `==`, `is`, `!=`, `>`, `<`, `in`;
+- logic: `and`, `or`, and a leading `not`;
+- expressions: `if (button available)`.
+
+Conditions evaluate from left to right. There are no grouping parentheses for boolean logic, so split complicated decisions into multiple `if` blocks.
+
+## Loops
 
 ```fl
 while on
-    system sleep 100
+    if (controls clicked) == "right"
+        stop
+    end
+    system sleep 80
 end
 ```
 
-Supported condition shapes include:
-
-- `on` / `off`
-- variables (truthy/falsey)
-- comparisons: `==`, `!=`, `>`, `<`, `in`
-- inline expressions: `if (controls pressed state=left) ... end`
-
-### `foreach`
-
-List iteration:
+`stop` exits the current loop; `skip` jumps to its next round.
 
 ```fl
-foreach wifi in scan
-    log info wifi.ssid
+foreach item in items
+    log info item
+end
+
+foreach number in 1-5
+    log info number
 end
 ```
 
-Numeric range iteration:
-
-```fl
-foreach i in 1-10
-    log info i
-end
-```
-
-### Loop control: `stop` and `skip`
-
-- `stop` breaks out of the current loop.
-- `skip` continues to the next iteration of the current loop.
+Numeric ranges include both endpoints and may count down.
 
 ## Events
 
-You can register event handlers:
-
 ```fl
 event system start
-    log info "System started!"
+    log info "Started!"
 end
 ```
 
-The runtime triggers `system start` after the boot script runs (see `os/main.py`).
+`on system start` is also accepted. FlanOS triggers this event after the boot script executes.
+
+## Comments
+
+```fl
+# The sensor is upside down because engineering happened
+```
+
+Comments occupy their own line and start with `#`. Inline comments are not supported.
