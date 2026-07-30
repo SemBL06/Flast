@@ -116,7 +116,7 @@ Should have a heading e.g: (minimum = title)
 ```yaml
 ---
 title: Welcome
-weight: 0
+order: 0
 sitemap:
   lastmod: "YYYY-MM-DD"
   changefreq: "monthly"
