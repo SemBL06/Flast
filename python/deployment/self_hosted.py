@@ -78,22 +78,14 @@ class SelfHostedProvider:
         if source_directory is None:
             return None
 
-        if not self._run_ssh(tools, root_dir):
-            print("Unable to create or access the configured remote directory.")
-            return None
-
         dry_run = self._run_rsync(tools, root_dir, source_directory, dry_run=True)
         if dry_run is None:
             print("Unable to preview the remote sync.")
             return None
 
-        deletions = [line for line in dry_run.stdout.splitlines() if line.startswith("*deleting ")]
-        if deletions:
-            print("The following remote files will be deleted:")
-            print("\n".join(deletions))
-            if not self._confirm_deletions(deletions):
-                print("Deployment cancelled; no remote files were changed.")
-                return None
+        if not self._confirm_deletions([]):
+            print("Deployment cancelled; no remote files were changed.")
+            return None
 
         if self._run_rsync(tools, root_dir, source_directory, dry_run=False) is None:
             print("rsync failed while updating the remote site.")
@@ -159,19 +151,6 @@ class SelfHostedProvider:
             return None
         return result.stdout.strip().rstrip("/") + "/"
 
-    def _run_ssh(self, tools: SyncTools, root_dir: Path) -> bool:
-        remote_command = f"mkdir -p -- {shlex.quote(self.target.remote_path)}"
-        try:
-            result = subprocess.run(
-                [*tools.ssh_command, "-p", str(self.target.port), self.target.destination, remote_command],
-                cwd=root_dir,
-                check=False,
-            )
-        except OSError as error:
-            print(f"Unable to start SSH: {error}")
-            return False
-        return result.returncode == 0
-
     def _run_rsync(
         self, tools: SyncTools, root_dir: Path, source_directory: str, *, dry_run: bool
     ) -> subprocess.CompletedProcess[str] | None:
@@ -180,6 +159,7 @@ class SelfHostedProvider:
             *tools.rsync_command,
             "-rlptz",
             "--delete",
+            "--mkpath",
             "--itemize-changes",
             "-e",
             f"ssh -p {self.target.port}",
@@ -197,18 +177,12 @@ class SelfHostedProvider:
                 command,
                 cwd=root_dir,
                 check=False,
-                capture_output=dry_run,
-                text=dry_run,
             )
         except OSError as error:
             print(f"Unable to start rsync: {error}")
             return None
         if result.returncode != 0:
-            if dry_run and result.stderr:
-                print(result.stderr.strip())
             return None
-        if dry_run and result.stdout:
-            print(result.stdout.strip())
         return result
 
 
@@ -216,4 +190,4 @@ def _confirm_deletions(_: list[str]) -> bool:
     """Ask only when running Flast interactively, keeping the provider UI-agnostic."""
     import questionary
 
-    return questionary.confirm("Continue with these deletions?", default=False).ask()
+    return questionary.confirm("Apply this deployment preview?", default=False).ask()

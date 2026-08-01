@@ -48,7 +48,75 @@ class SelfHostedProviderTests(unittest.TestCase):
             self.assertEqual(2, run.call_count)
             self.assertIn("--dry-run", run.call_args_list[0].args[0])
             self.assertIn("--mkpath", run.call_args_list[0].args[0])
+            self.assertNotIn("--dry-run", run.call_args_list[1].args[0])
+            self.assertIn("--mkpath", run.call_args_list[1].args[0])
             self.assertNotIn("capture_output", run.call_args_list[0].kwargs)
+            self.assertNotIn("stdout", run.call_args_list[0].kwargs)
+            self.assertNotIn("stderr", run.call_args_list[0].kwargs)
+            confirmation.assert_called_once_with([])
+
+    def test_cancelling_after_preview_does_not_apply_sync(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root_dir = Path(temporary)
+            public_dir = root_dir / "public"
+            public_dir.mkdir()
+            confirmation = MagicMock(return_value=False)
+            provider = SelfHostedProvider(self.target, confirm_deletions=confirmation)
+
+            with (
+                patch("python.deployment.self_hosted.shutil.which", side_effect=["ssh", "rsync"]),
+                patch(
+                    "python.deployment.self_hosted.subprocess.run",
+                    return_value=subprocess.CompletedProcess([], 0),
+                ) as run,
+            ):
+                self.assertIsNone(provider.deploy_directory(root_dir, public_dir))
+
+            self.assertEqual(1, run.call_count)
+            self.assertIn("--dry-run", run.call_args.args[0])
+            confirmation.assert_called_once_with([])
+
+    def test_failed_preview_does_not_request_confirmation_or_apply_sync(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root_dir = Path(temporary)
+            public_dir = root_dir / "public"
+            public_dir.mkdir()
+            confirmation = MagicMock(return_value=True)
+            provider = SelfHostedProvider(self.target, confirm_deletions=confirmation)
+
+            with (
+                patch("python.deployment.self_hosted.shutil.which", side_effect=["ssh", "rsync"]),
+                patch(
+                    "python.deployment.self_hosted.subprocess.run",
+                    return_value=subprocess.CompletedProcess([], 1),
+                ) as run,
+            ):
+                self.assertIsNone(provider.deploy_directory(root_dir, public_dir))
+
+            self.assertEqual(1, run.call_count)
+            confirmation.assert_not_called()
+
+    def test_failed_real_sync_returns_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root_dir = Path(temporary)
+            public_dir = root_dir / "public"
+            public_dir.mkdir()
+            confirmation = MagicMock(return_value=True)
+            provider = SelfHostedProvider(self.target, confirm_deletions=confirmation)
+
+            with (
+                patch("python.deployment.self_hosted.shutil.which", side_effect=["ssh", "rsync"]),
+                patch(
+                    "python.deployment.self_hosted.subprocess.run",
+                    side_effect=[
+                        subprocess.CompletedProcess([], 0),
+                        subprocess.CompletedProcess([], 1),
+                    ],
+                ) as run,
+            ):
+                self.assertIsNone(provider.deploy_directory(root_dir, public_dir))
+
+            self.assertEqual(2, run.call_count)
             confirmation.assert_called_once_with([])
 
     def test_uses_wsl_rsync_when_native_rsync_is_missing(self):

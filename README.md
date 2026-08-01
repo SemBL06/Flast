@@ -1,7 +1,9 @@
 # Flast
-Flast is a *Static Site Generator* (SSG) for documentation focused on human and AI use. Used in all my projects. 
+
+Flast is a _Static Site Generator_ (SSG) for documentation focused on human and AI use. Used in all my projects.
 
 ## Features
+
 - SEO compliant (robots.txt + sitemap.xml)
 - Supports all filetypes (.ico, .jpeg...)
 - Image conversion to .webp for faster loading times
@@ -10,9 +12,11 @@ Flast is a *Static Site Generator* (SSG) for documentation focused on human and 
 - Deployment options
 
 ## Getting Started
-1. Clone the code from the Github repo.   
+
+1. Clone the code from the Github repo.
 2. (optional) Create Virtual Environment
 3. Install dependencies
+
 ```Bash
 #Virtual Environment
 python -m venv .venv
@@ -20,14 +24,18 @@ python -m venv .venv
 # Dependencies
 pip install -r requirements.txt
 ```
+
 Then
+
 ```Bash
 python main.py
 ```
-to start the wizard. 
+
+to start the wizard.
 
 ### Deploy to Netlify
-Select `Netlify` under `Deploy` → `Netlify`. 
+
+Select `Netlify` under `Deploy` → `Netlify`.
 If the configured domain is still `http://localhost/`, Flast
 first deploys a temporary one-file page, saves Netlify's production URL in the
 configuration, regenerates the site (including sitemap and robots URLs), and
@@ -35,10 +43,12 @@ then deploys the real `public/` files. When a domain is already configured,
 Flast deploys `public/` directly.
 
 Before your first deployment, install the [Netlify CLI](https://docs.netlify.com/api-and-cli-guides/cli-guides/get-started-with-cli/) and authenticate it:
+
 ```Bash
 npm install -g netlify-cli
 netlify login
 ```
+
 The first deployment will let the Netlify CLI link this project to an existing
 site or create one. Flast does not store Netlify credentials. The deployment
 system is provider-based so future services can add their own adapter without
@@ -105,14 +115,36 @@ Flast automatically falls back to `wsl rsync` when native rsync is absent. Set
 up WSL with a Linux distribution, then install `rsync` and `openssh-client`
 inside that distribution. Flast previews the rsync mirror, shows any
 `*deleting` entries, and asks for confirmation before applying the preview.
-The destination directory is created by rsync when needed. Authentication is
-handled by SSH: an SSH agent/key is preferred, but password prompts also work
-and are never saved.
+The destination directory is created by rsync when needed. Previewing and
+applying the deployment use separate SSH sessions, so password authentication
+prompts twice and each prompt remains visible. Configure an SSH key and agent
+for passwordless deployments. Flast never saves SSH passwords.
+
+For better security, deploy with a dedicated user instead of logging in as
+`root` or `www-data`. The web server only needs read access to static files;
+the deployment user can own them while sharing the `www-data` group. On a
+Debian or Ubuntu server, prepare the account and destination directory with:
+
+```Bash
+sudo adduser deploy
+sudo usermod -aG www-data deploy
+sudo mkdir -p /var/www/mywebsite
+sudo chown -R deploy:www-data /var/www/mywebsite
+sudo find /var/www/mywebsite -type d -exec chmod 2755 {} +
+sudo find /var/www/mywebsite -type f -exec chmod 0644 {} +
+```
+
+Then configure Flast to use `deploy` as its SSH user. The set-group-ID bit on
+the directories keeps newly created content in the `www-data` group. If the
+site has a writable area such as an uploads directory, grant `www-data` write
+access only to that directory rather than to the entire site.
 
 You can easily install `rsync` on Windows by installing `WSL` and a Linux distribution.
 
 #### .md
+
 Should have a heading e.g: (minimum = title)
+
 ```yaml
 ---
 title: Welcome
@@ -123,8 +155,10 @@ sitemap:
   priority: "0.5"
 ---
 ```
-Then the rest of the .md file. 
+
+Then the rest of the .md file.
 
 ## Example
-Content contains example  documentation of FlanOS. Find it here:   
+
+Content contains example documentation of FlanOS. Find it here:  
 [FlanOS Documentation](https://flanos.forageek.com/)
