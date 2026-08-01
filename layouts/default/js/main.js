@@ -64,6 +64,36 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${start > 0 ? "…" : ""}${content.slice(start, end)}${end < content.length ? "…" : ""}`;
   }
 
+  function appendHighlightedText(container, content, terms) {
+    const escapedTerms = [...new Set(terms)]
+      .sort((first, second) => second.length - first.length)
+      .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+    if (!escapedTerms.length) {
+      container.append(document.createTextNode(content));
+      return;
+    }
+
+    const matches = new RegExp(`(${escapedTerms.join("|")})`, "gi");
+    let lastIndex = 0;
+    let match;
+
+    while ((match = matches.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        container.append(document.createTextNode(content.slice(lastIndex, match.index)));
+      }
+
+      const strong = document.createElement("strong");
+      strong.textContent = match[0];
+      container.append(strong);
+      lastIndex = matches.lastIndex;
+    }
+
+    if (lastIndex < content.length) {
+      container.append(document.createTextNode(content.slice(lastIndex)));
+    }
+  }
+
   function renderResults(results, terms) {
     searchResults.replaceChildren();
     const list = document.createElement("ul");
@@ -76,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       link.href = new URL(result.url, indexUrl).href;
       link.textContent = result.title;
-      excerpt.textContent = snippet(result.content, terms);
+      appendHighlightedText(excerpt, snippet(result.content, terms), terms);
 
       item.append(link, excerpt);
       list.append(item);
