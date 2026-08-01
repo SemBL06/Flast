@@ -59,7 +59,7 @@ Supported pieces:
 - booleans: `on`, `off`;
 - comparison: `==`, `is`, `!=`, `>`, `<`, `in`;
 - logic: `and`, `or`, and a leading `not`;
-- expressions: `if (button available)`.
+- expressions: `if (controls available)`.
 
 Conditions evaluate from left to right. There are no grouping parentheses for boolean logic, so split complicated decisions into multiple `if` blocks.
 

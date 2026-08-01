@@ -1,6 +1,6 @@
 ---
 title: "Configure Your Board"
-description: "Set storage pins, displays, buttons, Wi-Fi, sensors, and actuators in main.yml."
+description: "Set storage pins, displays, controls, Wi-Fi, sensors, and actuators in main.yml."
 order: 13
 sitemap:
   lastmod: "2026-07-30"
@@ -29,7 +29,7 @@ storage:
 
 These Pico W defaults use SPI0. Pin values may be numbers or names such as `"GP16"`. FlanOS boots without a card if mounting fails.
 
-## Display and buttons
+## Display and controls
 
 ```yml
 display:
@@ -41,7 +41,8 @@ display:
     rows: 4
     cols: 20
 
-buttons:
+controls:
+  driver: "buttons"
   left: 0
   right: 1
   up: 2

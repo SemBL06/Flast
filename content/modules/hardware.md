@@ -1,6 +1,6 @@
 ---
 title: "Hardware & UI Commands"
-description: "Cheat sheet for display, ui, controls, button, input, and output."
+description: "Cheat sheet for display, ui, controls, input, and output."
 order: 31
 sitemap:
   lastmod: "2026-07-30"
@@ -57,7 +57,7 @@ end
 ui description text=selected title="Details"
 ```
 
-## `controls` and `button`
+## `controls`
 
 Use `controls` in normal programs:
 
@@ -69,9 +69,18 @@ end
 controls reset
 ```
 
-Directions are `left`, `right`, `up`, and `down`. `controls available`, `controls raw`, `controls debug`, and `controls probe pin=0` are useful for diagnostics.
+Buttons use `left`, `right`, `up`, and `down`. The common controls vocabulary also supports `released`, scalar `value`, and joystick-style `axis` reads:
 
-`button` exposes the raw backend with equivalent `get`, `available`, `debug`, and `probe` actions. It is mainly for debugging or compatibility; `controls` and `ui` are friendlier roommates.
+```fl
+if (controls released state=left)
+    log info "Left released"
+end
+set x to (controls axis name=x)
+set raw to (controls value name=left)
+set status to (controls debug)
+```
+
+The active provider is selected by `controls.driver` in `/config/main.yml`. Unsupported operations return a neutral value and are described by `controls debug`.
 
 ## `input` and `output`
 
